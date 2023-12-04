@@ -17,7 +17,7 @@ PFont font;
 float time = 0;
 int frames = 0;
 
-Random rng = new Random(123);
+Random rng = new Random(2023);
 
 void setup(){
   // bg = loadImage("bg.png");
@@ -64,6 +64,7 @@ void drawVDJ(VDJ vdjHeavy, VDJ vdjLight, int xOffset) {
   final int HALF_DNA_HEIGHT = 10;
   final int DNA_LABEL_HEIGHT = 10;
   final float NUCLEOTIDE_WIDTH = 2;
+  final float MAX_VDJ_COLOR_SHIFT = 75;
   
   {
     final float Y_BASELINE = Y_CENTER - HALF_DNA_HEIGHT * 3;
@@ -88,20 +89,46 @@ void drawVDJ(VDJ vdjHeavy, VDJ vdjLight, int xOffset) {
   {
     final float Y_BASELINE = Y_CENTER - HALF_DNA_HEIGHT * 2;
     
+    final float V_LEFT = xOffset - 175;
+    final float V_RIGHT = xOffset - 0 - NUCLEOTIDE_WIDTH * 1.5 - NUCLEOTIDE_WIDTH * vdjHeavy.VRightDel;
+    final float D_LEFT = xOffset - 0 + NUCLEOTIDE_WIDTH * 1.5 + NUCLEOTIDE_WIDTH * vdjHeavy.DLeftDel;
+    final float D_RIGHT = xOffset + 175.0/2 - NUCLEOTIDE_WIDTH * 1.5 - NUCLEOTIDE_WIDTH * vdjHeavy.DRightDel;
+    final float J_LEFT = xOffset + 175.0/2 + NUCLEOTIDE_WIDTH * 1.5 + NUCLEOTIDE_WIDTH * vdjHeavy.JLeftDel;
+    final float J_RIGHT = xOffset + 175.0;
+    
     stroke(0);
-    line(xOffset - 175, Y_BASELINE, xOffset + 175.0, Y_BASELINE);
+    line(V_LEFT, Y_BASELINE, J_RIGHT, Y_BASELINE);
     noStroke();
     
     rectMode(CORNERS);
-    fill(240 - 3*vdjHeavy.V, 100 - 3*vdjHeavy.V, 100 - 3*vdjHeavy.V);
-    rect(xOffset - 175, Y_BASELINE - HALF_DNA_HEIGHT, xOffset - 0 - NUCLEOTIDE_WIDTH * 1.5 - NUCLEOTIDE_WIDTH * vdjHeavy.VRightDel, Y_BASELINE + HALF_DNA_HEIGHT);
-    fill(100 - 3*vdjHeavy.D, 240 - 3*vdjHeavy.D, 100 - 3*vdjHeavy.D);
-    rect(xOffset - 0 + NUCLEOTIDE_WIDTH * 1.5 + NUCLEOTIDE_WIDTH * vdjHeavy.DLeftDel, Y_BASELINE - HALF_DNA_HEIGHT, xOffset + 175.0/2 - NUCLEOTIDE_WIDTH * 1.5 - NUCLEOTIDE_WIDTH * vdjHeavy.DRightDel, Y_BASELINE + HALF_DNA_HEIGHT);
-    fill(100 - 3*vdjHeavy.J, 100 - 3*vdjHeavy.J, 240 - 3*vdjHeavy.J);
-    rect(xOffset + 175.0/2 + NUCLEOTIDE_WIDTH * 1.5 + NUCLEOTIDE_WIDTH * vdjHeavy.JLeftDel, Y_BASELINE - HALF_DNA_HEIGHT, xOffset + 175.0, Y_BASELINE + HALF_DNA_HEIGHT);
+    final float V_COLOR_SHIFT = MAX_VDJ_COLOR_SHIFT*vdjHeavy.V/vdjHeavy.MAX_V;
+    fill(240 - V_COLOR_SHIFT, 100 - V_COLOR_SHIFT, 100 - V_COLOR_SHIFT);
+    rect(V_LEFT, Y_BASELINE - HALF_DNA_HEIGHT, V_RIGHT, Y_BASELINE + HALF_DNA_HEIGHT);
+    final float D_COLOR_SHIFT = MAX_VDJ_COLOR_SHIFT*vdjHeavy.D/vdjHeavy.MAX_D;
+    fill(100 - D_COLOR_SHIFT, 240 - D_COLOR_SHIFT, 100 - D_COLOR_SHIFT);
+    rect(D_LEFT, Y_BASELINE - HALF_DNA_HEIGHT, D_RIGHT, Y_BASELINE + HALF_DNA_HEIGHT);
+    final float J_COLOR_SHIFT = MAX_VDJ_COLOR_SHIFT*vdjHeavy.J/vdjHeavy.MAX_J;
+    fill(100 - J_COLOR_SHIFT, 100 - J_COLOR_SHIFT, 240 - J_COLOR_SHIFT);
+    rect(J_LEFT, Y_BASELINE - HALF_DNA_HEIGHT, J_RIGHT, Y_BASELINE + HALF_DNA_HEIGHT);
     fill(128);
     rect(xOffset - 0 - NUCLEOTIDE_WIDTH * vdjHeavy.VDIns / 2.0, Y_BASELINE - HALF_DNA_HEIGHT, xOffset - 0 + NUCLEOTIDE_WIDTH * vdjHeavy.VDIns / 2.0, Y_BASELINE + HALF_DNA_HEIGHT);
     rect(xOffset + 175.0/2 - NUCLEOTIDE_WIDTH * vdjHeavy.DJIns / 2.0, Y_BASELINE - HALF_DNA_HEIGHT, xOffset + 175.0/2 + NUCLEOTIDE_WIDTH * vdjHeavy.DJIns / 2.0, Y_BASELINE + HALF_DNA_HEIGHT);
+    rectMode(CENTER);
+    fill(0);
+    
+    rectMode(CORNERS);
+    fill(192);
+    for (double mutationLocus : vdjHeavy.mutationLoci) {
+      double mutationXCoord = 0.0;
+      if (mutationLocus < 1.0) {
+        mutationXCoord = (V_RIGHT - V_LEFT) * mutationLocus + V_LEFT;
+      } else if (mutationLocus < 2.0) {
+        mutationXCoord = (D_RIGHT - D_LEFT) * (mutationLocus - 1.0) + D_LEFT;
+      } else {
+        mutationXCoord = (J_RIGHT - J_LEFT) * (mutationLocus - 2.0) + J_LEFT;
+      }
+      rect((float) mutationXCoord - NUCLEOTIDE_WIDTH * 0.5, Y_BASELINE - HALF_DNA_HEIGHT, (float) mutationXCoord + NUCLEOTIDE_WIDTH * 0.5, Y_BASELINE + HALF_DNA_HEIGHT);
+    }
     rectMode(CENTER);
     fill(0);
   }
@@ -125,17 +152,40 @@ void drawVDJ(VDJ vdjHeavy, VDJ vdjLight, int xOffset) {
   {
     final float Y_BASELINE = Y_CENTER + HALF_DNA_HEIGHT * 2;
     
+    final float V_LEFT = xOffset - 175;
+    final float V_RIGHT = xOffset - 0 - NUCLEOTIDE_WIDTH * 1.5 - NUCLEOTIDE_WIDTH * vdjLight.VRightDel;
+    final float J_LEFT = xOffset - 0 + NUCLEOTIDE_WIDTH * 1.5 + NUCLEOTIDE_WIDTH * vdjLight.JLeftDel;
+    final float J_RIGHT = xOffset + 175.0/2;
+    
     stroke(0);
-    line(xOffset - 175, Y_BASELINE, xOffset + 175.0/2, Y_BASELINE);
+    line(V_LEFT, Y_BASELINE, J_RIGHT, Y_BASELINE);
     noStroke();
     
     rectMode(CORNERS);
-    fill(240 - 3*vdjLight.V, 100 - 3*vdjLight.V, 100 - 3*vdjLight.V);
-    rect(xOffset - 175, Y_BASELINE - HALF_DNA_HEIGHT, xOffset - 0 - NUCLEOTIDE_WIDTH * 1.5 - NUCLEOTIDE_WIDTH * vdjLight.VRightDel, Y_BASELINE + HALF_DNA_HEIGHT);
-    fill(100 - 3*vdjLight.J, 100 - 3*vdjLight.J, 240 - 3*vdjLight.D);
-    rect(xOffset - 0 + NUCLEOTIDE_WIDTH * 1.5 + NUCLEOTIDE_WIDTH * vdjLight.JLeftDel, Y_BASELINE - HALF_DNA_HEIGHT, xOffset + 175.0/2, Y_BASELINE + HALF_DNA_HEIGHT);
+    final float V_COLOR_SHIFT = MAX_VDJ_COLOR_SHIFT*vdjLight.V/vdjLight.MAX_V;
+    fill(240 - V_COLOR_SHIFT, 100 - V_COLOR_SHIFT, 100 - V_COLOR_SHIFT);
+    rect(V_LEFT, Y_BASELINE - HALF_DNA_HEIGHT, V_RIGHT, Y_BASELINE + HALF_DNA_HEIGHT);
+    final float J_COLOR_SHIFT = MAX_VDJ_COLOR_SHIFT*vdjLight.J/vdjLight.MAX_J;
+    fill(100 - J_COLOR_SHIFT, 100 - J_COLOR_SHIFT, 240 - J_COLOR_SHIFT);
+    rect(J_LEFT, Y_BASELINE - HALF_DNA_HEIGHT, J_RIGHT, Y_BASELINE + HALF_DNA_HEIGHT);
     fill(128);
     rect(xOffset - 0 - NUCLEOTIDE_WIDTH * vdjLight.VDIns / 2.0, Y_BASELINE - HALF_DNA_HEIGHT, xOffset - 0 + NUCLEOTIDE_WIDTH * vdjLight.VDIns / 2.0, Y_BASELINE + HALF_DNA_HEIGHT);
+    rectMode(CENTER);
+    fill(0);
+    
+    rectMode(CORNERS);
+    fill(192);
+    for (double mutationLocus : vdjLight.mutationLoci) {
+      double mutationXCoord = 0.0;
+      if (mutationLocus < 1.0) {
+        mutationXCoord = (V_RIGHT - V_LEFT) * mutationLocus + V_LEFT;
+      } else if (mutationLocus < 2.0) {
+        continue;
+      } else {
+        mutationXCoord = (J_RIGHT - J_LEFT) * (mutationLocus - 2.0) + J_LEFT;
+      }
+      rect((float) mutationXCoord - NUCLEOTIDE_WIDTH * 0.5, Y_BASELINE - HALF_DNA_HEIGHT, (float) mutationXCoord + NUCLEOTIDE_WIDTH * 0.5, Y_BASELINE + HALF_DNA_HEIGHT);
+    }
     rectMode(CENTER);
     fill(0);
   }
@@ -184,6 +234,8 @@ void updateVDJ(int expectedBeat) {
     case 2:
       lbound = -5;
       ubound = vdj2Heavy.KaExponent + 2;
+      vdj1Heavy = new VDJ(vdj2Heavy);
+      vdj1Light = new VDJ(vdj2Light);
       vdj1Heavy.mutate(lbound, ubound);
       vdj1Light.mutate(lbound, ubound);
   }
@@ -205,10 +257,17 @@ void draw(){
   int expectedBeat = (int) (time * BPM / (double) 60) + 1; // start at 1
   updateStage();
   updateVDJ(expectedBeat);
-  drawVDJ(vdj1Heavy, vdj1Light, 420);
+  int vdj1XOffset;
+  if (currentStage == 2) {
+    vdj1XOffset = 240;
+  } else {
+    vdj1XOffset = 420;
+  }
+  if (currentStage != 1) {
+    drawVDJ(vdj1Heavy, vdj1Light, vdj1XOffset);
+  }
   drawVDJ(vdj2Heavy, vdj2Light, 840);
   scale(SCALE);
-  // lights();
   videoExport.saveFrame();
   time += PLAY_SPEED / (double) FPS;
   frames++;
@@ -250,6 +309,10 @@ public class VDJ {
   ArrayList<String> mutations;
   boolean hasValidReadingFrame;
   
+  final int MAX_V = 44;
+  final int MAX_D = 27;
+  final int MAX_J = 6;
+  
   VDJ(VDJ other) {
     V = other.V;
     VRightDel = other.VRightDel;
@@ -269,21 +332,21 @@ public class VDJ {
   
   VDJ(int minKaExp, int maxKaExp) {
     // numbers for deletion and insertion and Ka are arbitratily chosen
-    V = rng.nextInt(44) + 1;
+    V = rng.nextInt(MAX_V) + 1;
     VRightDel = rng.nextInt(6);
     VDIns = rng.nextInt(3);
     for (int i = 0; i < VDIns; i++) {
       VDInsMutations += randomBase();
     }
     DLeftDel = rng.nextInt(6);
-    D = rng.nextInt(27) + 1;
+    D = rng.nextInt(MAX_D) + 1;
     DRightDel = rng.nextInt(6);
     DJIns = rng.nextInt(3);
     for (int i = 0; i < DJIns; i++) {
       DJInsMutations += randomBase();
     }
     JLeftDel = rng.nextInt(6);
-    J = rng.nextInt(6) + 1;
+    J = rng.nextInt(MAX_J) + 1;
     newKa(minKaExp, maxKaExp);
     mutationLoci = new ArrayList<Double>();
     mutations = new ArrayList<String>();
